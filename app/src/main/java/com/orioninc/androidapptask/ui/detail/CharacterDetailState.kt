@@ -1,4 +1,5 @@
 package com.orioninc.androidapptask.ui.detail
+
 import com.orioninc.androidapptask.data.model.Character
 
 sealed class CharacterDetailState {
