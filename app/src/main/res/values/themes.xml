@@ -3,6 +3,10 @@
 
     <style name="Theme.AndroidAppTask" parent="android:Theme.Material.Light.NoActionBar" />
 
-
+    <style name="Theme.Splash.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/portal_icon</item>
+        <item name="postSplashScreenTheme">@style/Theme.AndroidAppTask</item>
+    </style>
 
 </resources>

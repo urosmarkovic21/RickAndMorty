@@ -5,4 +5,5 @@
     <string name="species">Species: %1$s</string>
     <string name="gender">Gender: %1$s</string>
     <string name="back">Back</string>
+    <string name="rick_morty"><![CDATA[Rick & Morty]]></string>
 </resources>
