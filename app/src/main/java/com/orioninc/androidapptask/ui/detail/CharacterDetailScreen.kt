@@ -11,28 +11,30 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.orioninc.androidapptask.data.network.RetrofitInstance
-import com.orioninc.androidapptask.data.repository.CharacterRepository
+import com.orioninc.androidapptask.R
 
 @Composable
 fun CharacterDetailScreen(
-    characterId: Int,
+    viewModel: CharacterDetailViewModel,
     onBackClick: () -> Unit
 ) {
-    val repository = CharacterRepository(RetrofitInstance.api)
-    val factory = CharacterDetailViewModelFactory(repository, characterId)
-    val viewModel: CharacterDetailViewModel = viewModel(factory = factory)
     val state by viewModel.state.collectAsState()
 
-    Column(modifier = Modifier
-        .fillMaxSize()
-        .systemBarsPadding()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.statusBars)
     ) {
         IconButton(onClick = { onBackClick() }) {
-            Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(
+                    R.string.back
+                )
+            )
         }
 
         when (state) {
@@ -41,29 +43,35 @@ fun CharacterDetailScreen(
                     CircularProgressIndicator()
                 }
             }
+
             is CharacterDetailState.Error -> {
                 val message = (state as CharacterDetailState.Error).message
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(text = message)
                 }
             }
+
             is CharacterDetailState.Success -> {
                 val character = (state as CharacterDetailState.Success).character
                 Column(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     AsyncImage(
                         model = character.image,
                         contentDescription = character.name,
-                        modifier = Modifier.size(200.dp).clip(CircleShape)
+                        modifier = Modifier
+                            .size(200.dp)
+                            .clip(CircleShape)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(text = character.name, style = MaterialTheme.typography.headlineMedium)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(text = "Status: ${character.status}")
-                    Text(text = "Species: ${character.species}")
-                    Text(text = "Gender: ${character.gender}")
+                    Text(text = stringResource(R.string.status, character.status))
+                    Text(text = stringResource(R.string.species, character.species))
+                    Text(text = stringResource(R.string.gender, character.gender))
                 }
             }
         }

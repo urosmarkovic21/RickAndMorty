@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">AndroidAppTask</string>
+    <string name="retry">Retry</string>
+    <string name="status">Status: %1$s</string>
+    <string name="species">Species: %1$s</string>
+    <string name="gender">Gender: %1$s</string>
+    <string name="back">Back</string>
 </resources>

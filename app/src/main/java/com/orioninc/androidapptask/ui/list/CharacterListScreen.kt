@@ -11,17 +11,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.orioninc.androidapptask.data.repository.CharacterRepository
-import com.orioninc.androidapptask.data.network.RetrofitInstance
+import androidx.compose.ui.res.stringResource
+import com.orioninc.androidapptask.R
 
 @Composable
 fun CharacterListScreen(
+    viewModel: CharacterListViewModel,
     onCharacterClick: (Int) -> Unit
 ) {
-    val repository = CharacterRepository(RetrofitInstance.api)
-    val factory = CharacterListViewModelFactory(repository)
-    val viewModel: CharacterListViewModel = viewModel(factory = factory)
     val state by viewModel.state.collectAsState()
 
     when (state) {
@@ -30,20 +27,26 @@ fun CharacterListScreen(
                 CircularProgressIndicator()
             }
         }
+
         is CharacterListState.Error -> {
             val message = (state as CharacterListState.Error).message
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(text = message)
                     Button(onClick = { viewModel.retry() }) {
-                        Text("Retry")
+                        Text(stringResource(R.string.retry))
                     }
                 }
             }
         }
+
         is CharacterListState.Success -> {
             val characters = (state as CharacterListState.Success).data
-            LazyColumn (modifier = Modifier.systemBarsPadding()){
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.statusBars)
+            ) {
                 items(characters) { character ->
                     CharacterItem(
                         character = character,

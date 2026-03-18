@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class CharacterListViewModel (
+class CharacterListViewModel(
     private val repository: CharacterRepository
-) : ViewModel(){
+) : ViewModel() {
     private val _state = MutableStateFlow<CharacterListState>(CharacterListState.Loading)
     val state: StateFlow<CharacterListState> = _state
 
