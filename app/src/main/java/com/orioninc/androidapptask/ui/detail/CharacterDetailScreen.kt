@@ -1,5 +1,8 @@
 package com.orioninc.androidapptask.ui.detail
 
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -17,10 +20,13 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.orioninc.androidapptask.R
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun CharacterDetailScreen(
     viewModel: CharacterDetailViewModel,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    animatedVisibilityScope: AnimatedVisibilityScope,
+    sharedTransitionScope: SharedTransitionScope
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -60,14 +66,19 @@ fun CharacterDetailScreen(
                             .fillMaxSize()
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
+                    ) {with(sharedTransitionScope) {
                         AsyncImage(
                             model = character.image,
                             contentDescription = character.name,
                             modifier = Modifier
                                 .size(200.dp)
+                                .sharedElement(
+                                    state = rememberSharedContentState(key = "image-${character.id}"),
+                                    animatedVisibilityScope = animatedVisibilityScope
+                                )
                                 .clip(CircleShape)
                         )
+                    }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(text = character.name, style = MaterialTheme.typography.headlineMedium)
                         Spacer(modifier = Modifier.height(8.dp))
