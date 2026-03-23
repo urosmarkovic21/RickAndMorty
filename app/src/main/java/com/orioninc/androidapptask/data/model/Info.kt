@@ -1,5 +1,5 @@
 package com.orioninc.androidapptask.data.model
 
 data class Info(
-    val next: String
+    val next: String?
 )

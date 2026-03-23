@@ -10,7 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.orioninc.androidapptask.data.network.RetrofitInstance
-import com.orioninc.androidapptask.data.repository.CharacterRepository
+import com.orioninc.androidapptask.data.repository.CharacterRepositoryImpl
 import com.orioninc.androidapptask.ui.detail.CharacterDetailScreen
 import com.orioninc.androidapptask.ui.detail.CharacterDetailViewModel
 import com.orioninc.androidapptask.ui.detail.CharacterDetailViewModelFactory
@@ -21,7 +21,7 @@ import com.orioninc.androidapptask.ui.list.CharacterListViewModelFactory
 @Composable
 fun AppNavGraph() {
     val navController = rememberNavController()
-    val repository = CharacterRepository(RetrofitInstance.api)
+    val repository = CharacterRepositoryImpl(RetrofitInstance.api)
     SharedTransitionLayout {
         NavHost(
             navController = navController,
