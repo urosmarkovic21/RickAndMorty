@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import coil.ImageLoader
 import com.orioninc.androidapptask.ui.navigation.AppNavGraph
 import com.orioninc.androidapptask.ui.theme.AndroidAppTaskTheme
 import coil.Coil
@@ -24,6 +23,7 @@ class MainActivity : ComponentActivity() {
         }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
             AndroidAppTaskTheme {
                 AppNavGraph()
