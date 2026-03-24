@@ -1,12 +1,9 @@
 package com.orioninc.androidapptask.data.repository
 
-import com.orioninc.androidapptask.data.model.Character
 import com.orioninc.androidapptask.data.model.CharacterResponse
-import com.orioninc.androidapptask.data.network.CharacterApi
+import com.orioninc.androidapptask.data.model.Character
 
-class CharacterRepository(val api: CharacterApi) {
-
-    suspend fun getCharacters(page: Int): CharacterResponse = api.getCharacters(page)
-
-    suspend fun getCharacter(id: Int): Character = api.getCharacter(id)
+interface CharacterRepository {
+    suspend fun getCharacters(page: Int): CharacterResponse
+    suspend fun getCharacter(id: Int): Character
 }
