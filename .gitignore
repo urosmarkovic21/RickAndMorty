@@ -11,13 +11,18 @@ gen/
 out/
 .gradle/
 build/
+app/build/
 .externalNativeBuild
 .cxx/
+
+# Release builds
+app/release/
 
 # Local configuration & Secrets
 local.properties
 *.jks
 *.keystore
+*.pem
 
 # IDE and OS files
 .idea/
@@ -26,3 +31,7 @@ local.properties
 captures/
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+androidapptask-release-key

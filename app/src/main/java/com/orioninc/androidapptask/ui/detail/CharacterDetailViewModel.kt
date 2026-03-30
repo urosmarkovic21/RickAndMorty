@@ -2,31 +2,47 @@ package com.orioninc.androidapptask.ui.detail
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.orioninc.androidapptask.data.repository.CharacterRepository
+import com.orioninc.androidapptask.domain.GetCharacterUseCase
+import com.orioninc.androidapptask.domain.RefreshCharacterUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class CharacterDetailViewModel(
-    private val repository: CharacterRepository,
-    private val characterId: Int
+    private val getCharacterUseCase: GetCharacterUseCase,
+    private val refreshCharacterUseCase: RefreshCharacterUseCase,
+    private val characterId: Int,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow<CharacterDetailState>(CharacterDetailState.Loading)
     val state: StateFlow<CharacterDetailState> = _state
 
     init {
-        fetchCharacter()
+        observeCharacter()
+        refreshCharacter()
     }
 
-    private fun fetchCharacter() {
+    private fun observeCharacter() {
         viewModelScope.launch {
-            _state.value = CharacterDetailState.Loading
+            getCharacterUseCase(characterId).collect { character ->
+                _state.value =
+                    if (character != null) {
+                        CharacterDetailState.Success(character)
+                    } else {
+                        CharacterDetailState.Loading
+                    }
+            }
+        }
+    }
+
+    private fun refreshCharacter() {
+        viewModelScope.launch {
             try {
-                val character = repository.getCharacter(characterId)
-                _state.value = CharacterDetailState.Success(character)
+                refreshCharacterUseCase(characterId)
             } catch (e: Exception) {
-                _state.value = CharacterDetailState.Error(e.message ?: "Unknown error")
+                _state.value =
+                    CharacterDetailState.Error(
+                        e.message ?: "Unknown error",
+                    )
             }
         }
     }

@@ -31,47 +31,48 @@ import androidx.compose.ui.unit.dp
 import com.orioninc.androidapptask.R
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-@OptIn(ExperimentalMaterialApi::class,ExperimentalSharedTransitionApi::class)
+
+@OptIn(ExperimentalMaterialApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun CharacterListScreen(
     viewModel: CharacterListViewModel,
     onCharacterClick: (Int) -> Unit,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    sharedTransitionScope: SharedTransitionScope
+    sharedTransitionScope: SharedTransitionScope,
 ) {
     val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
-    val pullRefreshState = rememberPullRefreshState(
-        refreshing = state.isInitialLoading,
-        onRefresh = { viewModel.retry() }
-    )
+    val pullRefreshState =
+        rememberPullRefreshState(
+            refreshing = state.isInitialLoading,
+            onRefresh = { viewModel.refreshFromStart() },
+        )
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
 
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .pullRefresh(pullRefreshState)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .pullRefresh(pullRefreshState),
         ) {
             when {
-                state.isInitialLoading -> {
+                state.isInitialLoading && state.characters.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         CircularProgressIndicator()
                     }
                 }
 
-                state.errorMessage != null -> {
-
+                state.errorMessage != null && state.characters.isEmpty() -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                        contentAlignment = Alignment.Center,
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
                             Text(text = state.errorMessage!!)
 
                             Button(onClick = { viewModel.retry() }) {
@@ -84,27 +85,28 @@ fun CharacterListScreen(
                 else -> {
                     LazyColumn(
                         state = listState,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
                     ) {
                         items(
                             items = state.characters,
-                            key = { it.id }
+                            key = { it.id },
                         ) { character ->
                             CharacterItem(
                                 character = character,
                                 onClick = { onCharacterClick(character.id) },
                                 animatedVisibilityScope = animatedVisibilityScope,
-                                sharedTransitionScope = sharedTransitionScope
+                                sharedTransitionScope = sharedTransitionScope,
                             )
                         }
 
                         if (state.isLoadingMore) {
                             item {
                                 Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
+                                    modifier =
+                                        Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                    contentAlignment = Alignment.Center,
                                 ) {
                                     CircularProgressIndicator()
                                 }
@@ -117,14 +119,15 @@ fun CharacterListScreen(
             PullRefreshIndicator(
                 refreshing = state.isInitialLoading,
                 state = pullRefreshState,
-                modifier = Modifier.align(Alignment.TopCenter)
+                modifier = Modifier.align(Alignment.TopCenter),
             )
 
             LaunchedEffect(listState) {
                 snapshotFlow {
-                    listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index
-                }
-                    .distinctUntilChanged()
+                    listState.layoutInfo.visibleItemsInfo
+                        .lastOrNull()
+                        ?.index
+                }.distinctUntilChanged()
                     .debounce(300)
                     .collect { lastVisible ->
 

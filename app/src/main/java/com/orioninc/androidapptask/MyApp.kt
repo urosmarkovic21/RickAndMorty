@@ -7,25 +7,27 @@ import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import kotlinx.coroutines.Dispatchers
 
-class MyApp: Application() {
+class MyApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        val imageLoader = ImageLoader.Builder(this)
-            .dispatcher(Dispatchers.IO.limitedParallelism(4))
-            .crossfade(true)
-            .memoryCache {
-                MemoryCache.Builder(this)
-                    .maxSizePercent(0.25)
-                    .build()
-            }
-            .diskCache {
-                DiskCache.Builder()
-                    .directory(cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(50 * 1024 * 1024)
-                    .build()
-            }
-            .build()
+        val imageLoader =
+            ImageLoader
+                .Builder(this)
+                .dispatcher(Dispatchers.IO.limitedParallelism(4))
+                .crossfade(true)
+                .memoryCache {
+                    MemoryCache
+                        .Builder(this)
+                        .maxSizePercent(0.25)
+                        .build()
+                }.diskCache {
+                    DiskCache
+                        .Builder()
+                        .directory(cacheDir.resolve("image_cache"))
+                        .maxSizeBytes(50 * 1024 * 1024)
+                        .build()
+                }.build()
 
         Coil.setImageLoader(imageLoader)
     }
