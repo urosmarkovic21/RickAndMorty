@@ -1,10 +1,7 @@
 package com.orioninc.androidapptask.ui.detail
 
 import com.orioninc.androidapptask.data.model.Character
-import com.orioninc.androidapptask.data.repository.CharacterRepository
 import com.orioninc.androidapptask.fake.FakeCharacterRepository
-import com.orioninc.androidapptask.ui.list.CharacterListViewModel
-import io.mockk.coEvery
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -33,60 +30,61 @@ class CharacterDetailViewModelTest {
     }
 
     @Test
-    fun `fetchCharacter success updates state to Success`() = runTest {
+    fun `fetchCharacter success updates state to Success`() =
+        runTest {
+            val character = createCharacter(1, "Rick")
+            fakeRepository.character = character
 
-        val character = createCharacter(1, "Rick")
-        fakeRepository.character = character
+            viewModel = CharacterDetailViewModel(fakeRepository, 1)
 
-        viewModel = CharacterDetailViewModel(fakeRepository, 1)
+            advanceUntilIdle()
 
-        advanceUntilIdle()
+            val state = viewModel.state.value
 
-        val state = viewModel.state.value
-
-        assert(state is CharacterDetailState.Success)
-        assert((state as CharacterDetailState.Success).character == character)
-    }
-
-    @Test
-    fun `fetchCharacter error updates state to Error`() = runTest {
-
-        fakeRepository.shouldThrowCharacterError = true
-
-        viewModel = CharacterDetailViewModel(fakeRepository, 1)
-
-        advanceUntilIdle()
-
-        val state = viewModel.state.value
-
-        assert(state is CharacterDetailState.Error)
-    }
+            assert(state is CharacterDetailState.Success)
+            assert((state as CharacterDetailState.Success).character == character)
+        }
 
     @Test
-    fun `initial state is Loading`() = runTest {
+    fun `fetchCharacter error updates state to Error`() =
+        runTest {
+            fakeRepository.shouldThrowCharacterError = true
 
-        val character = createCharacter(1, "Rick")
-        fakeRepository.character = character
+            viewModel = CharacterDetailViewModel(fakeRepository, 1)
 
-        viewModel = CharacterDetailViewModel(fakeRepository, 1)
+            advanceUntilIdle()
 
-        val state = viewModel.state.value
+            val state = viewModel.state.value
 
-        assert(state is CharacterDetailState.Loading)
-    }
+            assert(state is CharacterDetailState.Error)
+        }
+
+    @Test
+    fun `initial state is Loading`() =
+        runTest {
+            val character = createCharacter(1, "Rick")
+            fakeRepository.character = character
+
+            viewModel = CharacterDetailViewModel(fakeRepository, 1)
+
+            val state = viewModel.state.value
+
+            assert(state is CharacterDetailState.Loading)
+        }
+
     private fun createCharacter(
         id: Int,
         name: String = "Test",
         gender: String = "Unknown",
         image: String = "",
         species: String = "Unknown",
-        status: String = "Alive"
+        status: String = "Alive",
     ) = Character(
         id = id,
         name = name,
         gender = gender,
         image = image,
         species = species,
-        status = status
+        status = status,
     )
 }

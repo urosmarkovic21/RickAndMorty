@@ -19,3 +19,15 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Preserve metadata needed by Retrofit and Gson
+-keepattributes Signature
+-keepattributes Exceptions
+-keepattributes InnerClasses
+-keepattributes EnclosingMethod
+-keepattributes RuntimeVisibleAnnotations
+-keepattributes RuntimeVisibleParameterAnnotations
+-keepattributes AnnotationDefault
+
+# Keep app model classes used for JSON parsing
+-keep class com.orioninc.androidapptask.data.model.** { *; }

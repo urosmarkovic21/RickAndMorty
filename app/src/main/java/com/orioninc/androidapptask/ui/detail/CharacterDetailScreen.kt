@@ -3,12 +3,22 @@ package com.orioninc.androidapptask.ui.detail
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -26,22 +36,24 @@ fun CharacterDetailScreen(
     viewModel: CharacterDetailViewModel,
     onBackClick: () -> Unit,
     animatedVisibilityScope: AnimatedVisibilityScope,
-    sharedTransitionScope: SharedTransitionScope
+    sharedTransitionScope: SharedTransitionScope,
 ) {
     val state by viewModel.state.collectAsState()
 
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
         ) {
             IconButton(onClick = { onBackClick() }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(
-                        R.string.back
-                    )
+                    contentDescription =
+                        stringResource(
+                            R.string.back,
+                        ),
                 )
             }
 
@@ -62,23 +74,28 @@ fun CharacterDetailScreen(
                 is CharacterDetailState.Success -> {
                     val character = (state as CharacterDetailState.Success).character
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {with(sharedTransitionScope) {
-                        AsyncImage(
-                            model = character.image,
-                            contentDescription = character.name,
-                            modifier = Modifier
-                                .size(200.dp)
-                                .sharedElement(
-                                    state = rememberSharedContentState(key = "image-${character.id}"),
-                                    animatedVisibilityScope = animatedVisibilityScope
-                                )
-                                .clip(CircleShape)
-                        )
-                    }
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        with(sharedTransitionScope) {
+                            AsyncImage(
+                                model = character.image,
+                                contentDescription = character.name,
+                                modifier =
+                                    Modifier
+                                        .size(200.dp)
+                                        .sharedElement(
+                                            state =
+                                                rememberSharedContentState(
+                                                    key = "image-${character.id}",
+                                                ),
+                                            animatedVisibilityScope = animatedVisibilityScope,
+                                        ).clip(CircleShape),
+                            )
+                        }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(text = character.name, style = MaterialTheme.typography.headlineMedium)
                         Spacer(modifier = Modifier.height(8.dp))

@@ -3,58 +3,84 @@ package com.orioninc.androidapptask.ui.list
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.orioninc.androidapptask.data.model.Character
-import com.orioninc.androidapptask.data.repository.CharacterRepository
+import com.orioninc.androidapptask.domain.GetCharactersUseCase
+import com.orioninc.androidapptask.domain.GetSavedCharactersRefreshResultUseCase
+import com.orioninc.androidapptask.domain.RefreshCharactersUseCase
+import com.orioninc.androidapptask.util.NotificationHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class CharacterListViewModel(
-    private val repository: CharacterRepository
+    private val getCharactersUseCase: GetCharactersUseCase,
+    private val refreshCharactersUseCase: RefreshCharactersUseCase,
+    private val getSavedCharactersRefreshResultUseCase: GetSavedCharactersRefreshResultUseCase,
+    private val notificationHelper: NotificationHelper,
 ) : ViewModel() {
     private val _state = MutableStateFlow(CharacterListState(isInitialLoading = true))
     val state: StateFlow<CharacterListState> = _state
-    private val displayedCharacters = mutableListOf<Character>()
-    private val cachedCharacters = mutableListOf<Character>()
-
+    private var allLoadedCharacters: List<Character> = emptyList()
+    private var visibleCount = 10
     private var nextPage: Int? = 1
-    private var lastPageReached = false
     private var requestInProgress = false
 
     init {
-        loadFirstPage()
+        observeCharacters()
+        refreshInitial()
     }
 
     fun retry() {
-        viewModelScope.launch {
-            requestInProgress = false
-            loadFirstPage()
+        if (_state.value.characters.isEmpty()) {
+            refreshInitial()
+        } else {
+            loadNextPage()
         }
     }
 
-    fun loadFirstPage() {
+    fun refreshFromStart() {
+        refreshInitial()
+    }
+
+    private fun observeCharacters() {
+        viewModelScope.launch {
+            getCharactersUseCase().collect { characters ->
+                allLoadedCharacters = characters
+                updateVisibleCharacters()
+            }
+        }
+    }
+
+    private fun refreshInitial() {
         if (requestInProgress) return
 
         viewModelScope.launch {
+            visibleCount = 10
+            nextPage = 1
             requestInProgress = true
 
-            _state.value = CharacterListState(isInitialLoading = true)
+            _state.value =
+                _state.value.copy(
+                    isInitialLoading = true,
+                    errorMessage = null,
+                    endReached = false,
+                )
             try {
-                displayedCharacters.clear()
-                cachedCharacters.clear()
-                nextPage = 1
-                lastPageReached = false
-
-                val response = repository.getCharacters(1)
-
-                displayedCharacters.addAll(response.results)
-
-                nextPage = if (response.info.next != null) 2 else null
-                lastPageReached = response.info.next == null
-                updateState()
+                val result = refreshCharactersUseCase(1)
+                nextPage = result.nextPage
+                updateVisibleCharacters()
+                notificationHelper.showRefreshSuccess(1)
             } catch (e: Exception) {
-                _state.value = CharacterListState(
-                    isInitialLoading = false,
-                    errorMessage = e.message ?: "Failed to load data"
+                val savedResult = getSavedCharactersRefreshResultUseCase()
+                nextPage = savedResult?.nextPage
+
+                _state.value =
+                    _state.value.copy(
+                        isInitialLoading = false,
+                        errorMessage = e.message ?: "Failed to load data",
+                    )
+                notificationHelper.showRefreshError(
+                    1,
+                    e.message ?: "Unknown error",
                 )
             } finally {
                 requestInProgress = false
@@ -62,55 +88,50 @@ class CharacterListViewModel(
         }
     }
 
-    private fun updateState() {
-        _state.value = CharacterListState(
-            characters = displayedCharacters.toList(),
-            isInitialLoading = false,
-            isLoadingMore = false,
-            errorMessage = null,
-            endReached = lastPageReached && cachedCharacters.isEmpty()
-        )
-    }
-
-    private suspend fun consumeBuffer() {
-        if (cachedCharacters.size < 10 && !lastPageReached) {
-            val page = nextPage ?: return
-            val response = repository.getCharacters(page)
-            cachedCharacters.addAll(response.results)
-            nextPage = if (response.info.next != null) page + 1 else null
-            lastPageReached = response.info.next == null
+    fun loadNextPage() {
+        if (requestInProgress) return
+        val canShowMoreFromLoaded = visibleCount < allLoadedCharacters.size
+        if (canShowMoreFromLoaded) {
+            visibleCount += 10
+            updateVisibleCharacters()
+            return
         }
-        val chunkSize = minOf(10,cachedCharacters.size)
-
-        if(chunkSize >0){
-            val chunk = cachedCharacters.take(chunkSize)
-            cachedCharacters.subList(0,chunkSize).clear()
-            displayedCharacters.addAll(chunk)
-        }
-    }
-
-    fun loadNextPage(){
-        if(requestInProgress)return
-        if(lastPageReached && cachedCharacters.isEmpty())return
+        val pageToLoad = nextPage ?: return
 
         viewModelScope.launch {
             requestInProgress = true
-            _state.value=_state.value.copy(
-                isLoadingMore = true,
-                errorMessage = null
-            )
+            _state.value =
+                _state.value.copy(
+                    isLoadingMore = true,
+                    errorMessage = null,
+                )
 
             try {
-                consumeBuffer()
-                updateState()
-            }catch (e: Exception){
-                _state.value = _state.value.copy(
-                    isLoadingMore = false,
-                    errorMessage = e.message?:"Failed to load more"
-                )
-            }finally {
+                val result = refreshCharactersUseCase(pageToLoad)
+                nextPage = result.nextPage
+                visibleCount += 10
+                updateVisibleCharacters()
+                notificationHelper.showRefreshSuccess(pageToLoad)
+            } catch (e: Exception) {
+                _state.value =
+                    _state.value.copy(
+                        isLoadingMore = false,
+                        errorMessage = e.message ?: "Failed to load more",
+                    )
+            } finally {
                 requestInProgress = false
             }
         }
+    }
+
+    private fun updateVisibleCharacters() {
+        _state.value =
+            _state.value.copy(
+                characters = allLoadedCharacters.take(visibleCount),
+                isInitialLoading = false,
+                isLoadingMore = false,
+                errorMessage = null,
+                endReached = nextPage == null && visibleCount >= allLoadedCharacters.size,
+            )
     }
 }

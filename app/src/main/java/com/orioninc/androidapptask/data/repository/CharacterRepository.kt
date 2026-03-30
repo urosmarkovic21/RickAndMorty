@@ -1,9 +1,17 @@
 package com.orioninc.androidapptask.data.repository
 
-import com.orioninc.androidapptask.data.model.CharacterResponse
 import com.orioninc.androidapptask.data.model.Character
+import com.orioninc.androidapptask.data.model.CharactersRefreshResult
+import kotlinx.coroutines.flow.Flow
 
 interface CharacterRepository {
-    suspend fun getCharacters(page: Int): CharacterResponse
-    suspend fun getCharacter(id: Int): Character
+    fun getCharacters(): Flow<List<Character>>
+
+    fun getCharacter(id: Int): Flow<Character?>
+
+    suspend fun refreshCharacters(page: Int): CharactersRefreshResult
+
+    suspend fun refreshCharacter(id: Int)
+
+    suspend fun getSavedCharactersRefreshResult(): CharactersRefreshResult?
 }

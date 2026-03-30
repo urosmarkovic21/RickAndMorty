@@ -6,14 +6,11 @@ import com.orioninc.androidapptask.data.model.Info
 import com.orioninc.androidapptask.data.repository.CharacterRepository
 
 class FakeCharacterRepository : CharacterRepository {
-
     var charactersPage1: List<Character> = emptyList()
     var charactersPage2: List<Character> = emptyList()
     var shouldThrowCharactersError = false
     var shouldThrowCharacterError = false
     var character: Character? = null
-
-
 
     override suspend fun getCharacters(page: Int): CharacterResponse {
         if (shouldThrowCharactersError) {
@@ -21,14 +18,16 @@ class FakeCharacterRepository : CharacterRepository {
         }
 
         return CharacterResponse(
-            results = when (page) {
-                1 -> charactersPage1
-                2 -> charactersPage2
-                else -> emptyList()
-            },
-            info = Info(
-                next = if (page == 1) "next" else null
-            )
+            results =
+                when (page) {
+                    1 -> charactersPage1
+                    2 -> charactersPage2
+                    else -> emptyList()
+                },
+            info =
+                Info(
+                    next = if (page == 1) "next" else null,
+                ),
         )
     }
 

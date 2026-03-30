@@ -5,7 +5,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitInstance {
     val api: CharacterApi by lazy {
-        Retrofit.Builder()
+        Retrofit
+            .Builder()
             .baseUrl("https://rickandmortyapi.com/api/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
