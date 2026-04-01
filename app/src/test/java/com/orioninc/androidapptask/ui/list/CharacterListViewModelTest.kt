@@ -25,7 +25,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CharacterListViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var fakeRepository: FakeCharacterRepository
@@ -45,176 +44,198 @@ class CharacterListViewModelTest {
     }
 
     private fun createViewModel() {
-        viewModel = CharacterListViewModel(
-            getCharactersUseCase = GetCharactersUseCase(fakeRepository),
-            refreshCharactersUseCase = RefreshCharactersUseCase(fakeRepository),
-            getSavedCharactersRefreshResultUseCase =
-                GetSavedCharactersRefreshResultUseCase(fakeRepository),
-            notificationHelper = notificationHelper,
-        )
+        viewModel =
+            CharacterListViewModel(
+                getCharactersUseCase = GetCharactersUseCase(fakeRepository),
+                refreshCharactersUseCase = RefreshCharactersUseCase(fakeRepository),
+                getSavedCharactersRefreshResultUseCase =
+                    GetSavedCharactersRefreshResultUseCase(fakeRepository),
+                notificationHelper = notificationHelper,
+            )
     }
 
     @Test
-    fun `loadFirstPage success updates state`() = runTest {
-        fakeRepository.characters = listOf(
-            createCharacter(id = 1, name = "Rick"),
-        )
-        fakeRepository.savedRefreshResult = CharactersRefreshResult(
-            nextPage = 2,
-            isLastPage = false,
-        )
+    fun `loadFirstPage success updates state`() =
+        runTest {
+            fakeRepository.characters =
+                listOf(
+                    createCharacter(id = 1, name = "Rick"),
+                )
+            fakeRepository.savedRefreshResult =
+                CharactersRefreshResult(
+                    nextPage = 2,
+                    isLastPage = false,
+                )
 
-        createViewModel()
-        advanceUntilIdle()
+            createViewModel()
+            advanceUntilIdle()
 
-        val state = viewModel.state.value
+            val state = viewModel.state.value
 
-        assertTrue(state.characters == fakeRepository.characters)
-        assertFalse(state.isInitialLoading)
-        assertNull(state.errorMessage)
-    }
-
-    @Test
-    fun `loadFirstPage error updates state with error`() = runTest {
-        fakeRepository.shouldThrowCharactersError = true
-
-        createViewModel()
-        advanceUntilIdle()
-
-        val state = viewModel.state.value
-
-        assertTrue(state.characters.isEmpty())
-        assertFalse(state.isInitialLoading)
-        assertNotNull(state.errorMessage)
-    }
+            assertTrue(state.characters == fakeRepository.characters)
+            assertFalse(state.isInitialLoading)
+            assertNull(state.errorMessage)
+        }
 
     @Test
-    fun `pagination adds new characters`() = runTest {
-        fakeRepository.characters = listOf(
-            createCharacter(1, "Rick"),
-            createCharacter(2, "Morty"),
-        )
-        fakeRepository.savedRefreshResult = CharactersRefreshResult(
-            nextPage = 2,
-            isLastPage = false,
-        )
+    fun `loadFirstPage error updates state with error`() =
+        runTest {
+            fakeRepository.shouldThrowCharactersError = true
 
-        createViewModel()
-        advanceUntilIdle()
+            createViewModel()
+            advanceUntilIdle()
 
-        viewModel.loadNextPage()
-        advanceUntilIdle()
+            val state = viewModel.state.value
 
-        val state = viewModel.state.value
-
-        assertTrue(state.characters.isNotEmpty())
-        assertNull(state.errorMessage)
-    }
+            assertTrue(state.characters.isEmpty())
+            assertFalse(state.isInitialLoading)
+            assertNotNull(state.errorMessage)
+        }
 
     @Test
-    fun `pagination error shows error message`() = runTest {
-        fakeRepository.characters = listOf(
-            createCharacter(1, "Rick"),
-        )
-        fakeRepository.savedRefreshResult = CharactersRefreshResult(
-            nextPage = 2,
-            isLastPage = false,
-        )
+    fun `pagination adds new characters`() =
+        runTest {
+            fakeRepository.characters =
+                listOf(
+                    createCharacter(1, "Rick"),
+                    createCharacter(2, "Morty"),
+                )
+            fakeRepository.savedRefreshResult =
+                CharactersRefreshResult(
+                    nextPage = 2,
+                    isLastPage = false,
+                )
 
-        createViewModel()
-        advanceUntilIdle()
+            createViewModel()
+            advanceUntilIdle()
 
-        fakeRepository.shouldThrowCharactersError = true
+            viewModel.loadNextPage()
+            advanceUntilIdle()
 
-        viewModel.loadNextPage()
-        advanceUntilIdle()
+            val state = viewModel.state.value
 
-        val state = viewModel.state.value
-
-        assertNotNull(state.errorMessage)
-    }
-
-    @Test
-    fun `loadFirstPage sets loading state correctly`() = runTest {
-        fakeRepository.characters = listOf(
-            createCharacter(1, "Rick"),
-        )
-
-        createViewModel()
-
-        val stateDuringLoad = viewModel.state.value
-        assertTrue(stateDuringLoad.isInitialLoading)
-
-        advanceUntilIdle()
-
-        val stateAfterLoad = viewModel.state.value
-        assertFalse(stateAfterLoad.isInitialLoading)
-    }
+            assertTrue(state.characters.isNotEmpty())
+            assertNull(state.errorMessage)
+        }
 
     @Test
-    fun `requestInProgress prevents multiple requests`() = runTest {
-        fakeRepository.characters = listOf(
-            createCharacter(1, "Rick"),
-        )
-        fakeRepository.savedRefreshResult = CharactersRefreshResult(
-            nextPage = 2,
-            isLastPage = false,
-        )
+    fun `pagination error shows error message`() =
+        runTest {
+            fakeRepository.characters =
+                listOf(
+                    createCharacter(1, "Rick"),
+                )
+            fakeRepository.savedRefreshResult =
+                CharactersRefreshResult(
+                    nextPage = 2,
+                    isLastPage = false,
+                )
 
-        createViewModel()
-        advanceUntilIdle()
+            createViewModel()
+            advanceUntilIdle()
 
-        viewModel.loadNextPage()
-        viewModel.loadNextPage()
-        advanceUntilIdle()
+            fakeRepository.shouldThrowCharactersError = true
 
-        val state = viewModel.state.value
+            viewModel.loadNextPage()
+            advanceUntilIdle()
 
-        assertTrue(state.characters.size == 1)
-    }
+            val state = viewModel.state.value
 
-    @Test
-    fun `loadNextPage does nothing when last page reached`() = runTest {
-        fakeRepository.characters = listOf(
-            createCharacter(1, "Rick"),
-        )
-        fakeRepository.savedRefreshResult = CharactersRefreshResult(
-            nextPage = null,
-            isLastPage = true,
-        )
-
-        createViewModel()
-        advanceUntilIdle()
-
-        viewModel.loadNextPage()
-        advanceUntilIdle()
-
-        val state = viewModel.state.value
-
-        assertTrue(state.characters.size == 1)
-    }
+            assertNotNull(state.errorMessage)
+        }
 
     @Test
-    fun `last page is reached correctly`() = runTest {
-        fakeRepository.characters = listOf(
-            createCharacter(1, "Rick"),
-            createCharacter(2, "Morty"),
-        )
-        fakeRepository.savedRefreshResult = CharactersRefreshResult(
-            nextPage = null,
-            isLastPage = true,
-        )
+    fun `loadFirstPage sets loading state correctly`() =
+        runTest {
+            fakeRepository.characters =
+                listOf(
+                    createCharacter(1, "Rick"),
+                )
 
-        createViewModel()
-        advanceUntilIdle()
+            createViewModel()
 
-        viewModel.loadNextPage()
-        advanceUntilIdle()
+            val stateDuringLoad = viewModel.state.value
+            assertTrue(stateDuringLoad.isInitialLoading)
 
-        val state = viewModel.state.value
+            advanceUntilIdle()
 
-        assertTrue(state.endReached)
-    }
+            val stateAfterLoad = viewModel.state.value
+            assertFalse(stateAfterLoad.isInitialLoading)
+        }
+
+    @Test
+    fun `requestInProgress prevents multiple requests`() =
+        runTest {
+            fakeRepository.characters =
+                listOf(
+                    createCharacter(1, "Rick"),
+                )
+            fakeRepository.savedRefreshResult =
+                CharactersRefreshResult(
+                    nextPage = 2,
+                    isLastPage = false,
+                )
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.loadNextPage()
+            viewModel.loadNextPage()
+            advanceUntilIdle()
+
+            val state = viewModel.state.value
+
+            assertTrue(state.characters.size == 1)
+        }
+
+    @Test
+    fun `loadNextPage does nothing when last page reached`() =
+        runTest {
+            fakeRepository.characters =
+                listOf(
+                    createCharacter(1, "Rick"),
+                )
+            fakeRepository.savedRefreshResult =
+                CharactersRefreshResult(
+                    nextPage = null,
+                    isLastPage = true,
+                )
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.loadNextPage()
+            advanceUntilIdle()
+
+            val state = viewModel.state.value
+
+            assertTrue(state.characters.size == 1)
+        }
+
+    @Test
+    fun `last page is reached correctly`() =
+        runTest {
+            fakeRepository.characters =
+                listOf(
+                    createCharacter(1, "Rick"),
+                    createCharacter(2, "Morty"),
+                )
+            fakeRepository.savedRefreshResult =
+                CharactersRefreshResult(
+                    nextPage = null,
+                    isLastPage = true,
+                )
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.loadNextPage()
+            advanceUntilIdle()
+
+            val state = viewModel.state.value
+
+            assertTrue(state.endReached)
+        }
 
     private fun createCharacter(
         id: Int,

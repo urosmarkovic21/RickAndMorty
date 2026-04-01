@@ -19,7 +19,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CharacterDetailViewModelTest {
-
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var fakeRepository: FakeCharacterRepository
@@ -37,50 +36,54 @@ class CharacterDetailViewModelTest {
     }
 
     private fun createViewModel(characterId: Int = 1) {
-        viewModel = CharacterDetailViewModel(
-            getCharacterUseCase = GetCharacterUseCase(fakeRepository),
-            refreshCharacterUseCase = RefreshCharacterUseCase(fakeRepository),
-            characterId = characterId,
-        )
+        viewModel =
+            CharacterDetailViewModel(
+                getCharacterUseCase = GetCharacterUseCase(fakeRepository),
+                refreshCharacterUseCase = RefreshCharacterUseCase(fakeRepository),
+                characterId = characterId,
+            )
     }
 
     @Test
-    fun `fetchCharacter success updates state to Success`() = runTest {
-        val character = createCharacter(1, "Rick")
-        fakeRepository.character = character
+    fun `fetchCharacter success updates state to Success`() =
+        runTest {
+            val character = createCharacter(1, "Rick")
+            fakeRepository.character = character
 
-        createViewModel()
-        advanceUntilIdle()
+            createViewModel()
+            advanceUntilIdle()
 
-        val state = viewModel.state.value
+            val state = viewModel.state.value
 
-        assertTrue(state is CharacterDetailState.Success)
-        assertEquals(character, (state as CharacterDetailState.Success).character)
-    }
-
-    @Test
-    fun `fetchCharacter error updates state to Error`() = runTest {
-        fakeRepository.shouldThrowCharacterError = true
-
-        createViewModel()
-        advanceUntilIdle()
-
-        val state = viewModel.state.value
-
-        assertTrue(state is CharacterDetailState.Error)
-    }
+            assertTrue(state is CharacterDetailState.Success)
+            assertEquals(character, (state as CharacterDetailState.Success).character)
+        }
 
     @Test
-    fun `initial state is Loading`() = runTest {
-        val character = createCharacter(1, "Rick")
-        fakeRepository.character = character
+    fun `fetchCharacter error updates state to Error`() =
+        runTest {
+            fakeRepository.shouldThrowCharacterError = true
 
-        createViewModel()
+            createViewModel()
+            advanceUntilIdle()
 
-        val state = viewModel.state.value
+            val state = viewModel.state.value
 
-        assertTrue(state is CharacterDetailState.Loading)
-    }
+            assertTrue(state is CharacterDetailState.Error)
+        }
+
+    @Test
+    fun `initial state is Loading`() =
+        runTest {
+            val character = createCharacter(1, "Rick")
+            fakeRepository.character = character
+
+            createViewModel()
+
+            val state = viewModel.state.value
+
+            assertTrue(state is CharacterDetailState.Loading)
+        }
 
     private fun createCharacter(
         id: Int,

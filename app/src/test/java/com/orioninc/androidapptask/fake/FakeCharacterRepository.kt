@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 class FakeCharacterRepository : CharacterRepository {
-
     var characters: List<Character> = emptyList()
 
     var savedRefreshResult: CharactersRefreshResult? =
@@ -21,8 +20,7 @@ class FakeCharacterRepository : CharacterRepository {
 
     var character: Character? = null
 
-    override fun getCharacters(): Flow<List<Character>> =
-        flowOf(characters)
+    override fun getCharacters(): Flow<List<Character>> = flowOf(characters)
 
     override suspend fun refreshCharacters(page: Int): CharactersRefreshResult {
         if (shouldThrowCharactersError) {
