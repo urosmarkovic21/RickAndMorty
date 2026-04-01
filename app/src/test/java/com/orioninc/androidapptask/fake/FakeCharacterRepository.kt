@@ -1,38 +1,54 @@
 package com.orioninc.androidapptask.fake
 
 import com.orioninc.androidapptask.data.model.Character
-import com.orioninc.androidapptask.data.model.CharacterResponse
-import com.orioninc.androidapptask.data.model.Info
+import com.orioninc.androidapptask.data.model.CharactersRefreshResult
 import com.orioninc.androidapptask.data.repository.CharacterRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 class FakeCharacterRepository : CharacterRepository {
-    var charactersPage1: List<Character> = emptyList()
-    var charactersPage2: List<Character> = emptyList()
+
+    var characters: List<Character> = emptyList()
+
+    var savedRefreshResult: CharactersRefreshResult? =
+        CharactersRefreshResult(
+            nextPage = 2,
+            isLastPage = false,
+        )
+
     var shouldThrowCharactersError = false
     var shouldThrowCharacterError = false
+
     var character: Character? = null
 
-    override suspend fun getCharacters(page: Int): CharacterResponse {
+    override fun getCharacters(): Flow<List<Character>> =
+        flowOf(characters)
+
+    override suspend fun refreshCharacters(page: Int): CharactersRefreshResult {
         if (shouldThrowCharactersError) {
             throw Exception("Network error")
         }
 
-        return CharacterResponse(
-            results =
-                when (page) {
-                    1 -> charactersPage1
-                    2 -> charactersPage2
-                    else -> emptyList()
-                },
-            info =
-                Info(
-                    next = if (page == 1) "next" else null,
-                ),
+        return savedRefreshResult ?: CharactersRefreshResult(
+            nextPage = null,
+            isLastPage = true,
         )
     }
 
-    override suspend fun getCharacter(id: Int): Character {
-        if (shouldThrowCharacterError) throw Exception("Error")
-        return character ?: throw Exception("No data")
+    override fun getCharacter(id: Int): Flow<Character?> {
+        if (shouldThrowCharacterError) {
+            return flowOf(null)
+        }
+
+        return flowOf(character)
     }
+
+    override suspend fun refreshCharacter(id: Int) {
+        if (shouldThrowCharacterError) {
+            throw Exception("Error")
+        }
+    }
+
+    override suspend fun getSavedCharactersRefreshResult(): CharactersRefreshResult? =
+        savedRefreshResult
 }
